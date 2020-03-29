@@ -1,5 +1,5 @@
 import fibrous from "fibrous";
-import RegClient from 'npm-registry-client';
+import RegClient from "npm-registry-client";
 import { CustomArgv } from "./cli.const";
 import { getAuth } from "./index.service";
 import { logger } from "./logger";
