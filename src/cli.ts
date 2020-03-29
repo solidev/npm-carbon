@@ -1,4 +1,5 @@
 import fibrous from "fibrous";
+import fs from "fs";
 import RegClient from "npm-registry-client";
 import { CustomArgv } from "./cli.const";
 import { getAuth } from "./index.service";
@@ -12,7 +13,7 @@ export const cli = fibrous((argv: CustomArgv) => {
   const srcAuth = getAuth('src', argv);
   const destAuth = getAuth('dest', argv);
 
-  const { dest, destPrefix, src, srcPrefix } = argv;
+  const { dest, destPrefix, destRepo, src, srcPrefix } = argv;
 
   modules.forEach(module => {
     const srcName = srcPrefix ? `${srcPrefix}/${module}` : module;
@@ -51,8 +52,14 @@ export const cli = fibrous((argv: CustomArgv) => {
         const srcMetadata = srcVersions[versionName];
         const { dist } = srcMetadata;
 
-        const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
+        if (destRepo) {
+          const tgzFile = fs.createWriteStream(`${__dirname}/tmp/${versionName}.tgz`);
+          npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
+        } else {
+          // const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
+        }
 
+        /*
         const destMetadata = { ...srcMetadata }
 
         // Delete private properties and the 'dist' object.
@@ -62,6 +69,7 @@ export const cli = fibrous((argv: CustomArgv) => {
         npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
 
         logger.ok(`${versionName} migrated!`, "✅")
+        */
       })
     } catch (err) {
       logger.error(err, "💥");
