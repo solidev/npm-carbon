@@ -21,8 +21,9 @@ export const cli = fibrous((argv: CustomArgv) => {
     const srcUrl = `${src}/${srcName}`;
     const destUrl = `${dest}/${destName}`;
 
-    const srcConfig = {auth: srcAuth, timeout: 3000};
-    const destConfig = {auth: destAuth, timeout: 3000};
+    const baseConfig = { timeout: 3000 };
+    const srcConfig = { ...baseConfig, auth: srcAuth };
+    const destConfig = { ...baseConfig, auth: destAuth };
 
     logger.info("Comparing versions from source and destination.", "🔎");
 
