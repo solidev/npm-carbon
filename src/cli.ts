@@ -37,16 +37,16 @@ export const cli = fibrous((argv: CustomArgv) => {
       const destKeys = Object.keys(destVersions);
 
       // Hat Tip: https://medium.com/@alvaro.saburido/set-theory-for-arrays-in-es6-eb2f20a61848
-      const diff = srcKeys.filter(x => !destKeys.includes(x));
+      const versionsToMigrate = srcKeys.filter(x => !destKeys.includes(x));
 
-      if (!diff.length) {
+      if (!versionsToMigrate.length) {
         logger.ok('No items differ. Nothing to migrate!', "✅");
         process.exit(0)
       }
 
-      logger.info(diff.length === 1 ? "1 item differs!" : `${diff.length} items differ!`, "🔀");
+      logger.info(versionsToMigrate.length === 1 ? "1 item differs!" : `${versionsToMigrate.length} items differ!`, "🔀");
 
-      diff.forEach((key) => {
+      versionsToMigrate.forEach((key) => {
         const srcMetadata = srcVersions[key];
         const { dist } = srcMetadata;
 
