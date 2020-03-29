@@ -14,7 +14,7 @@ Use this command line tool to make a "carbon copy" of any npm package and all it
 No installation needed. Use `@appsweet-co/npm-carbon` directly from npm using the `npx` command.
 
 ```sh
-npx @appsweet-co/npm-carbon <OPTIONS>
+npx @appsweet-co/npm-carbon [OPTIONS]
 ```
 
 
@@ -94,7 +94,7 @@ npm start
 Run the local JavaScript file directly to check your changes.
 
 ```sh
-./bin/index.js <OPTIONS>
+./bin/index.js [OPTIONS]
 ```
 
 #### Run Tests
