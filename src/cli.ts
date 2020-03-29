@@ -24,6 +24,8 @@ export const cli = fibrous((argv: CustomArgv) => {
     const srcConfig = {auth: srcAuth, timeout: 3000};
     const destConfig = {auth: destAuth, timeout: 3000};
 
+    logger.info("Comparing versions from source and destination.", "🔎");
+
     try {
       logger.info("Getting versions from source...", "📡");
       const srcVersions = npm.sync.get(srcUrl, srcConfig).versions;
