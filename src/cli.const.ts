@@ -6,6 +6,7 @@ export interface CustomArgv {
   destEmail: string | undefined;
   destPassword: string | undefined;
   destPrefix: string | undefined;
+  destRepo: string | undefined;
   destToken: string | undefined;
   destUser: string | undefined;
   src: string;
