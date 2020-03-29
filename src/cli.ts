@@ -46,8 +46,8 @@ export const cli = fibrous((argv: CustomArgv) => {
 
       logger.info(versionsToMigrate.length === 1 ? "1 item differs!" : `${versionsToMigrate.length} items differ!`, "🔀");
 
-      versionsToMigrate.forEach((key) => {
-        const srcMetadata = srcVersions[key];
+      versionsToMigrate.forEach((versionName) => {
+        const srcMetadata = srcVersions[versionName];
         const { dist } = srcMetadata;
 
         const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
@@ -60,7 +60,7 @@ export const cli = fibrous((argv: CustomArgv) => {
 
         npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
 
-        logger.ok(`${key} migrated!`, "✅")
+        logger.ok(`${versionName} migrated!`, "✅")
       })
     } catch (err) {
       logger.error(err, "💥");
