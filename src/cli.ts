@@ -1,3 +1,4 @@
+// @ts-nocheck
 import editJsonFile from "edit-json-file";
 import fibrous from "fibrous";
 import fs from "fs";
@@ -29,35 +30,29 @@ export const cli = fibrous((argv: CustomArgv) => {
     const destConfig = { ...baseConfig, auth: destAuth };
 
     try {
-      logger.info("Compairing registries. Getting versions from source...", "🔎");
-      const srcVersions = npm.sync.get(srcUrl, srcConfig).versions;
-
-      logger.info("Compairing registries. Getting versions from destination...", "🔎");
-      const destVersions = npm.sync.get(destUrl, destConfig).versions;
+      const srcVersions = getVersionsFrom('src', srcUrl, srcConfig);
+      const destVersions = getVersionsFrom('dest', destUrl, destConfig);
 
       const srcKeys = Object.keys(srcVersions);
       const destKeys = Object.keys(destVersions);
 
-      // Hat Tip: https://medium.com/@alvaro.saburido/set-theory-for-arrays-in-es6-eb2f20a61848
-      const versionsToMigrate = srcKeys.filter(x => !destKeys.includes(x));
+      const versionsToMigrate = getDiff(srcKeys, destKeys);
       const versionCount = versionsToMigrate.length;
 
       if (versionCount === 0) {
         logger.ok('No items differ. Nothing to migrate!', "✅");
-        process.exit(0)
+        process.exit(0);
       }
 
       versionsToMigrate.forEach((versionName, index) => {
-        logger.info(`Migrating ${index + 1} of ${versionCount}...`, "📡");
+        const current = index + 1;
+
+        logger.info(`Migrating ${current} of ${versionCount}...`, "📡");
 
         const srcMetadata = srcVersions[versionName];
         const { dist } = srcMetadata;
 
-        const destMetadata = { ...srcMetadata }
-
-        // Delete private properties and the 'dist' object.
-        delete destMetadata._;
-        delete destMetadata.dist;
+        const destMetadata = getMetadata(srcMetadata);
 
         if (destRepo) {
           const tmpPath = `${__dirname}/tmp/${versionName}`;
@@ -69,38 +64,77 @@ export const cli = fibrous((argv: CustomArgv) => {
 
           const destFilePath = `${packagePath}/${fileName}`;
 
-          fs.mkdirSync(tmpPath, { recursive: true })
+          fs.mkdirSync(tmpPath, { recursive: true });
 
           const tgzFile = fs.createWriteStream(srcFilePath);
           npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
 
           targz.decompress({ src: srcFilePath, dest: tmpPath }, () => {
-            const file = editJsonFile(srcPackageFilePath);
-            file.set("repository.url", destRepo);
-            file.save();
-
-            targz.compress({ src: packagePath, dest: destFilePath }, () => {
-              const tarball = fs.createReadStream(destFilePath);
-              npm.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball }, () => {
-                logger.ok(`${index + 1} migrated!`, "✅")
-              })
-            })
+            logger.dev(`Decompressed ${current}!`);
           });
         } else {
-          // const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
+          const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
+          npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
+          logger.ok(`Item ${versionName} migrated!`, "✅")
         }
 
-        /*
+
+        return;
+        if (destRepo) {
 
 
-        npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
+          const tgzFile = fs.createWriteStream(srcFilePath);
+          npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
 
-        logger.ok(`${versionName} migrated!`, "✅")
-        */
+          // npm.fetch(dist.tarball, { auth: srcAuth }, (error, data) => {
+            // if (error) throw new Error(error);
+
+            logger.dev('FETCH DATA!');
+            // console.log({ data });
+          // })
+
+          // targz.decompress({ src: srcFilePath, dest: tmpPath }, () => {
+          //   const file = editJsonFile(srcPackageFilePath);
+          //   file.set("repository.url", destRepo);
+          //   file.save();
+
+          //   targz.compress({ src: packagePath, dest: destFilePath }, () => {
+          //     const tarball = fs.createReadStream(destFilePath);
+          //     npm.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball }, () => {
+          //       logger.ok(`${index + 1} migrated!`, "✅")
+          //     })
+          //   })
+          // });
+        } else {
+          // stuff...
+        }
       })
     } catch (err) {
       logger.error(__filename, "💥");
       logger.error(err, "💥");
     }
   })
+
+  function getVersionsFrom(type: string, url: string, config: any) {
+    logger.info(`Compairing registries. Getting versions from ${type === 'src' ? 'source' : 'destination' }...`, "🔎");
+    return npm.sync.get(url, config).versions;
+  }
+
+  function getDiff(src: string[], dest: string[]) {
+    // Hat Tip: https://medium.com/@alvaro.saburido/set-theory-for-arrays-in-es6-eb2f20a61848
+    return src.filter(x => !dest.includes(x));
+  }
+
+  function getMetadata(data: any) {
+    // Delete private properties and the 'dist' object.
+    const output = { ...data, _:undefined, dist: undefined };
+    return JSON.parse(JSON.stringify(output));
+  }
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 })
