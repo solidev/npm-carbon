@@ -27,13 +27,11 @@ export const cli = fibrous((argv: CustomArgv) => {
     const srcConfig = { ...baseConfig, auth: srcAuth };
     const destConfig = { ...baseConfig, auth: destAuth };
 
-    logger.info("Comparing versions from source and destination.", "🔎");
-
     try {
-      logger.info("Getting versions from source...", "📡");
+      logger.info("Compairing registries. Getting versions from source...", "🔎");
       const srcVersions = npm.sync.get(srcUrl, srcConfig).versions;
 
-      logger.info("Getting versions from destination...", "📡");
+      logger.info("Compairing registries. Getting versions from destination...", "🔎");
       const destVersions = npm.sync.get(destUrl, destConfig).versions;
 
       const srcKeys = Object.keys(srcVersions);
@@ -41,15 +39,16 @@ export const cli = fibrous((argv: CustomArgv) => {
 
       // Hat Tip: https://medium.com/@alvaro.saburido/set-theory-for-arrays-in-es6-eb2f20a61848
       const versionsToMigrate = srcKeys.filter(x => !destKeys.includes(x));
+      const versionCount = versionsToMigrate.length;
 
-      if (!versionsToMigrate.length) {
+      if (versionCount === 0) {
         logger.ok('No items differ. Nothing to migrate!', "✅");
         process.exit(0)
       }
 
-      logger.info(versionsToMigrate.length === 1 ? "1 item differs!" : `${versionsToMigrate.length} items differ!`, "🔀");
+      versionsToMigrate.forEach((versionName, index) => {
+        logger.info(`Migrating ${index + 1} of ${versionCount}...`, "📡");
 
-      versionsToMigrate.forEach((versionName) => {
         const srcMetadata = srcVersions[versionName];
         const { dist } = srcMetadata;
 
@@ -58,13 +57,11 @@ export const cli = fibrous((argv: CustomArgv) => {
           const tmpFileName = `${versionName}.tgz`;
           const tmpFilePath = `${tmpPath}/${tmpFileName}`;
 
-          fs.mkdirSync(tmpPath, { recursive: true})
+          fs.mkdirSync(tmpPath, { recursive: true })
 
-          console.log(`==> ${tmpFilePath}`)
           const tgzFile = fs.createWriteStream(tmpFilePath);
-          console.log('==> FETCH')
           npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
-          console.log('==> EXTRACT')
+
           targz.decompress({
             src: tmpFilePath,
             dest: tmpPath,
