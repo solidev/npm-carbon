@@ -1,6 +1,7 @@
 import fibrous from "fibrous";
 import fs from "fs";
 import RegClient from "npm-registry-client";
+import targz from "targz";
 import { CustomArgv } from "./cli.const";
 import { getAuth } from "./index.service";
 import { logger } from "./logger";
@@ -53,8 +54,21 @@ export const cli = fibrous((argv: CustomArgv) => {
         const { dist } = srcMetadata;
 
         if (destRepo) {
-          const tgzFile = fs.createWriteStream(`${__dirname}/tmp/${versionName}.tgz`);
+          const tmpPath = `${__dirname}/tmp/${versionName}`;
+          const tmpFileName = `${versionName}.tgz`;
+          const tmpFilePath = `${tmpPath}/${tmpFileName}`;
+
+          fs.mkdirSync(tmpPath, { recursive: true})
+
+          console.log(`==> ${tmpFilePath}`)
+          const tgzFile = fs.createWriteStream(tmpFilePath);
+          console.log('==> FETCH')
           npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
+          console.log('==> EXTRACT')
+          targz.decompress({
+            src: tmpFilePath,
+            dest: tmpPath,
+          })
         } else {
           // const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
         }

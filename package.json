@@ -24,10 +24,12 @@
   "license": "MIT",
   "dependencies": {
     "@types/node": "^13.9.5",
+    "@types/targz": "^1.0.0",
     "@types/yargs": "^15.0.4",
     "chalk": "^3.0.0",
     "fibrous": "^0.4.0",
     "npm-registry-client": "^8.6.0",
+    "targz": "^1.0.1",
     "typescript": "^3.8.3",
     "yargs": "^15.3.1"
   },
