@@ -27,6 +27,7 @@
     "@types/targz": "^1.0.0",
     "@types/yargs": "^15.0.4",
     "chalk": "^3.0.0",
+    "edit-json-file": "^1.4.0",
     "fibrous": "^0.4.0",
     "npm-registry-client": "^8.6.0",
     "targz": "^1.0.1",

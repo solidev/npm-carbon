@@ -1,3 +1,4 @@
+import editJsonFile from "edit-json-file";
 import fibrous from "fibrous";
 import fs from "fs";
 import RegClient from "npm-registry-client";
@@ -52,30 +53,45 @@ export const cli = fibrous((argv: CustomArgv) => {
         const srcMetadata = srcVersions[versionName];
         const { dist } = srcMetadata;
 
-        if (destRepo) {
-          const tmpPath = `${__dirname}/tmp/${versionName}`;
-          const tmpFileName = `${versionName}.tgz`;
-          const tmpFilePath = `${tmpPath}/${tmpFileName}`;
-
-          fs.mkdirSync(tmpPath, { recursive: true })
-
-          const tgzFile = fs.createWriteStream(tmpFilePath);
-          npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
-
-          targz.decompress({
-            src: tmpFilePath,
-            dest: tmpPath,
-          })
-        } else {
-          // const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
-        }
-
-        /*
         const destMetadata = { ...srcMetadata }
 
         // Delete private properties and the 'dist' object.
         delete destMetadata._;
         delete destMetadata.dist;
+
+        if (destRepo) {
+          const tmpPath = `${__dirname}/tmp/${versionName}`;
+          const fileName = `${versionName}.tgz`;
+          const packagePath = `${tmpPath}/package`;
+
+          const srcFilePath = `${tmpPath}/${fileName}`;
+          const srcPackageFilePath = `${packagePath}/package.json`;
+
+          const destFilePath = `${packagePath}/${fileName}`;
+
+          fs.mkdirSync(tmpPath, { recursive: true })
+
+          const tgzFile = fs.createWriteStream(srcFilePath);
+          npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
+
+          targz.decompress({ src: srcFilePath, dest: tmpPath }, () => {
+            const file = editJsonFile(srcPackageFilePath);
+            file.set("repository.url", destRepo);
+            file.save();
+
+            targz.compress({ src: packagePath, dest: destFilePath }, () => {
+              const tarball = fs.createReadStream(destFilePath);
+              npm.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball }, () => {
+                logger.ok(`${index + 1} migrated!`, "✅")
+              })
+            })
+          });
+        } else {
+          // const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
+        }
+
+        /*
+
 
         npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
 
