@@ -83,6 +83,7 @@ export const cli = fibrous((argv: CustomArgv) => {
         */
       })
     } catch (err) {
+      logger.error(__filename, "💥");
       logger.error(err, "💥");
     }
   })
