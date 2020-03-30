@@ -1,7 +1,11 @@
 import { categories, prefix, Types } from "./logger.const";
 
 export const logger = {
-  docs: (msg: string, emoji: string) => {
+  dev: (msg: string, emoji?: string) => {
+    generic('dev', msg, emoji)
+  },
+
+  docs: (msg: string, emoji?: string) => {
     generic('docs', msg, emoji)
   },
 

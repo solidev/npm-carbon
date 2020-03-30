@@ -1,8 +1,9 @@
 import chalk from 'chalk';
 
-export type Types = 'docs' | 'error' | 'info' | 'ok' | 'warn'
+export type Types = 'dev' | 'docs' | 'error' | 'info' | 'ok' | 'warn'
 
 export const categories = {
+  dev: chalk.magenta,
   docs: chalk.cyan,
   error: chalk.red,
   info: chalk.blue,
@@ -11,6 +12,7 @@ export const categories = {
 }
 
 export const prefix = {
+  dev: "==> [DEV]",
   docs: "==> [DOCS]",
   error: "==> [ERROR]",
   info: "==> [INFO]",
