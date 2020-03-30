@@ -1,4 +1,3 @@
-// @ts-nocheck
 import editJsonFile from "edit-json-file";
 import fibrous from "fibrous";
 import fs from "fs";
@@ -67,49 +66,24 @@ export const cli = fibrous((argv: CustomArgv) => {
           fs.mkdirSync(tmpPath, { recursive: true });
 
           const tgzFile = fs.createWriteStream(srcFilePath);
-
           npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
 
           targz.decompress({ src: srcFilePath, dest: tmpPath }, () => {
-            logger.dev(`Decompressed ${current}!`);
-          });
+            const file = editJsonFile(srcPackageFilePath);
+            file.set("repository.url", destRepo);
+            file.save();
 
-          // then what????
+            targz.compress({ src: packagePath, dest: destFilePath }, () => {
+              const tarball = fs.createReadStream(destFilePath);
+              npm.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball }, () => {
+                logger.ok(`${index + 1} migrated!`, "✅")
+              })
+            })
+          })
         } else {
           const tarball = npm.sync.fetch(dist.tarball, { auth: srcAuth });
           npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
           logger.ok(`Item ${versionName} migrated!`, "✅")
-        }
-
-
-        return;
-        if (destRepo) {
-
-
-          const tgzFile = fs.createWriteStream(srcFilePath);
-          npm.sync.fetch(dist.tarball, { auth: srcAuth }).pipe(tgzFile);
-
-          // npm.fetch(dist.tarball, { auth: srcAuth }, (error, data) => {
-            // if (error) throw new Error(error);
-
-            logger.dev('FETCH DATA!');
-            // console.log({ data });
-          // })
-
-          // targz.decompress({ src: srcFilePath, dest: tmpPath }, () => {
-          //   const file = editJsonFile(srcPackageFilePath);
-          //   file.set("repository.url", destRepo);
-          //   file.save();
-
-          //   targz.compress({ src: packagePath, dest: destFilePath }, () => {
-          //     const tarball = fs.createReadStream(destFilePath);
-          //     npm.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball }, () => {
-          //       logger.ok(`${index + 1} migrated!`, "✅")
-          //     })
-          //   })
-          // });
-        } else {
-          // stuff...
         }
       })
     } catch (err) {
