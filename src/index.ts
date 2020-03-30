@@ -33,6 +33,7 @@ const argv = yargs
 
 cli(argv, (err) => {
   if (err) {
+    logger.error(__filename, "💥");
     logger.error(err.stack || err, "💥");
     process.exit(1);
   }
