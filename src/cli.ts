@@ -12,14 +12,17 @@ export const cli = fibrous((argv: CustomArgv) => {
   const srcAuth = getAuth('src', argv);
   const destAuth = getAuth('dest', argv);
 
-  const { dest, destPrefix, src, srcPrefix } = argv;
+  const { dest, destPrefix, src, srcPrefix, destUrl } = argv;
 
   modules.forEach(module => {
     const srcName = srcPrefix ? `${srcPrefix}/${module}` : module;
     const destName = destPrefix ? `${destPrefix}/${module}` : module;
 
+
     const srcUrl = `${src}/${srcName}`;
-    const destUrl = `${dest}/${destName}`;
+    const destReadUrl = `${dest}/${destName}`;
+    const destPublishUrl = destUrl ? destUrl : dest;
+
 
     const srcConfig = {auth: srcAuth, timeout: 3000};
     const destConfig = {auth: destAuth, timeout: 3000};
@@ -29,7 +32,7 @@ export const cli = fibrous((argv: CustomArgv) => {
       const srcVersions = npm.sync.get(srcUrl, srcConfig).versions;
 
       logger.info("Getting versions from destination...", "📡");
-      const destVersions = npm.sync.get(destUrl, destConfig).versions;
+      const destVersions = npm.sync.get(destReadUrl, destConfig).versions;
 
       const srcKeys = Object.keys(srcVersions);
       const destKeys = Object.keys(destVersions);
@@ -55,8 +58,9 @@ export const cli = fibrous((argv: CustomArgv) => {
         // Delete private properties and the 'dist' object.
         delete destMetadata._;
         delete destMetadata.dist;
+        destMetadata.name = destName;
 
-        npm.sync.publish(dest, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
+        npm.sync.publish(destPublishUrl, { auth: destAuth, metadata: destMetadata, access: 'public', body: tarball })
 
         logger.ok(`${key} migrated!`, "✅")
       })
